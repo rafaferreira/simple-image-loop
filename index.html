@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Simplest image loop</title>
+    <style>
+        html,
+        body,
+        .wrapper {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            margin: 0px;
+            padding: 0px;
+        }
+
+        #img-loader {
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        .img-wrapper {
+            height: 99%;
+        }
+
+        .progressbar {
+            z-index: 10;
+            width: 100%;
+            height: 1%;
+            background-color: #212529;
+            padding: 1px;
+            border-radius: 2px;
+            box-shadow: inset 0 1px 3px rgba(255, 255, 255, .8);
+        }
+
+        .progressbar-fill {
+            z-index: 12;
+            display: block;
+            height: 22px;
+            background-color: #e52920;
+            border-radius: 2px;
+            height: 99%;
+        }
+
+        .animation {
+            transition: width 1100ms linear;
+            -webkit-transition: width 1100ms linear;
+            animation-fill-mode: forwards;
+        }
+
+        .img-label {
+            position: fixed;
+            bottom: 2%;
+            left: 0;
+            padding: 10px 40px;
+            width: 100%;
+            font-family: sans-serif;
+            text-shadow: 1px 1px 1px #333;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrapper">
+        <div class="img-wrapper">
+            <img id="img-loader">
+            <span id="label" class="img-label"></span>
+        </div>
+        <div class="progressbar">
+            <span id="progressbar" class="progressbar-fill animation"></span>
+        </div>
+    </div>
+</body>
+<script type="text/javascript">
+    const $ = document.querySelector.bind(document);
+    var loaderCounter = 0;
+    var progressBarInterval;
+
+    // Add a description to each image
+    const LABELS = {
+        DEFAULT: {
+            color: '#ffffff',
+            size: '35px',
+            text: 'Default label',
+        },
+        1: {
+            color: '#ffffff',
+            size: '35px',
+            text: 'Image one label',
+        },
+        3: {
+            color: '#ffffff',
+            size: '35px',
+            text: 'Image two label',        },
+    }
+
+    const OPTIONS = {
+        amountOfImages: 9,
+        imagesPath: './imgs/',
+        imagesFormat: 'png',
+        delayInSeconds: 5,
+        shouldStopOnEnd: false,
+    };
+
+
+
+
+    // After this line the MAGIC HAPPENS!
+
+    const PROGRESSBAR_WIDTH = {
+        initial: $("#progressbar").offsetWidth,
+        actual: $("#progressbar").offsetWidth,
+        subtrahend: $("#progressbar").offsetWidth / OPTIONS.delayInSeconds,
+    }
+
+    const resetProgressBar = () => {
+        $("#progressbar").classList.remove('animation');
+        clearInterval(progressBarInterval);
+
+        PROGRESSBAR_WIDTH.actual = PROGRESSBAR_WIDTH.initial;
+        $("#progressbar").style.width = '100%';
+        $("#progressbar").classList.add('animation');
+    }
+
+    const startProgressBar = () => {
+        resetProgressBar();
+        progressBarInterval = setInterval(decrementProgressBar, 1000);
+    }
+
+    const decrementProgressBar = () => {
+        PROGRESSBAR_WIDTH.actual -= PROGRESSBAR_WIDTH.subtrahend;
+        $("#progressbar").style.width = PROGRESSBAR_WIDTH.actual + 'px';
+
+        console.log("Progressbar", (PROGRESSBAR_WIDTH.actual / PROGRESSBAR_WIDTH.initial * 100) + "%");
+    };
+
+    const setLabel = () => {
+        $("#label").style.color = (!!LABELS[loaderCounter]) ? LABELS[loaderCounter].color || LABELS.DEFAULT.color : LABELS.DEFAULT.color;
+        $("#label").style.fontSize = (!!LABELS[loaderCounter]) ? LABELS[loaderCounter].size || LABELS.DEFAULT.size : LABELS.DEFAULT.size;
+        $("#label").innerText = (!!LABELS[loaderCounter]) ? LABELS[loaderCounter].text || LABELS.DEFAULT.text : LABELS.DEFAULT.text;
+    }
+
+    const loader = () => {
+        let imgSrc = `${OPTIONS.imagesPath}${++loaderCounter}.${OPTIONS.imagesFormat}`;
+        let isThelastImage = (loaderCounter > OPTIONS.amountOfImages);
+
+        if (isThelastImage && OPTIONS.shouldStopOnEnd) {
+            clearInterval(interval);
+            clearInterval(progressBarInterval);
+        } else if (isThelastImage) {
+            loaderCounter = 0;
+            loader();
+        } else {
+            $("#img-loader").src = imgSrc;
+            setLabel();
+            startProgressBar();
+        }
+    };
+
+    const interval = setInterval(loader, OPTIONS.delayInSeconds * 1000);
+    loader(); // Load the first immediatelly
+</script>
+
+</html>
